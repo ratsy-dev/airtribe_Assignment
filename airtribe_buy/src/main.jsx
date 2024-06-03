@@ -1,10 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { CssBaseline } from "@mui/material";
+import { ThemeProvider, createTheme } from "@mui/material";
 import App from "./App.jsx";
 import "./index.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 
 const theme = createTheme({
   palette: {
