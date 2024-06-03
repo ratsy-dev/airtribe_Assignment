@@ -1,11 +1,30 @@
 import React, { useState, useEffect } from "react";
 import AIRTRIBE_API from "../../api/baseApi";
-import { Card, CardContent, CardMedia, Typography, Box } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  Box,
+  Rating,
+  Tooltip,
+  Button,
+} from "@mui/material";
 import Skeleton from "@mui/material/Skeleton";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const AllProductPage = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [token, setToken] = useState(null);
+
+  useEffect(() => {
+    setToken(localStorage.getItem("token"));
+  }, [token]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -22,6 +41,28 @@ const AllProductPage = () => {
 
     fetchProducts();
   }, []);
+
+  const handleWishList = () => {
+    if (!token) {
+      toast.error("Please login for wishlisting a product");
+    }
+  };
+
+  const handleCart = () => {
+    if (!token) {
+      toast.error("Please login for adding a product to the cart");
+    }
+  };
+
+  const handleProductDetail = async (id) => {
+    try {
+      const response = await AIRTRIBE_API.get(`/products/${id}`);
+      const product = response.data;
+      navigate(`/products/${id}`, { state: { product } });
+    } catch (error) {
+      console.error(error.message || "Error fetching products");
+    }
+  };
 
   const skeletonArray = new Array(8).fill(0);
 
@@ -71,11 +112,18 @@ const AllProductPage = () => {
         >
           {products.map((product) => (
             <Card
-              raised
               key={product.id}
+              onClick={(id) => handleProductDetail(product.id)}
               sx={{
-                margin: "10px",
+                border: "none",
+                cursor: "pointer",
+                margin: "20px",
                 width: "300px",
+                transition: "transform 0.3s, box-shadow 0.3s",
+                "&:hover": {
+                  transform: "scale(1.05)",
+                  boxShadow: "0px 4px 40px rgba(0, 0, 0, 0.2)",
+                },
               }}
             >
               <CardMedia
@@ -91,23 +139,75 @@ const AllProductPage = () => {
                   justifyContent: "center",
                 }}
               >
-                <Typography
-                  variant="body1"
-                  component="p"
-                  alignSelf="center"
-                  sx={{ fontWeight: 500 }}
-                >
+                <Typography variant="body1" component="p" alignSelf="center">
                   {product.title.split(",")[0]}
                 </Typography>
                 <Typography
                   variant="body2"
                   component="p"
                   alignSelf="center"
-                  mt={3}
-                  sx={{ fontWeight: 500 }}
+                  mt={1}
+                  sx={{ fontSize: 18, fontWeight: "bold", color: "navy" }}
                 >
-                  Price: {product.price}
+                  ${product.price}
                 </Typography>
+                <Box
+                  sx={{
+                    mt: 3,
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-around",
+                  }}
+                >
+                  <Rating
+                    name="read-only"
+                    value={product.rating.rate}
+                    readOnly
+                  />
+                  <Button
+                    onClick={() => handleWishList()}
+                    style={{
+                      border: "none",
+                      outline: "none",
+                      background: "none",
+                      padding: 0,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Tooltip title="Add to Wishlist">
+                      <FavoriteIcon
+                        style={{ color: "red", fontSize: "1.6rem" }}
+                      />
+                    </Tooltip>
+                  </Button>
+                </Box>
+                <Box
+                  sx={{
+                    mt: 5,
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-around",
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    onClick={() => handleCart()}
+                    sx={{
+                      borderColor: "secondary.main",
+                      color: "secondary.main",
+                    }}
+                  >
+                    <ShoppingCartIcon
+                      style={{
+                        color: "red",
+                        fontSize: "1.6rem",
+                        marginRight: "0.5rem",
+                      }}
+                    />
+                    Add to cart
+                  </Button>
+                </Box>
               </CardContent>
             </Card>
           ))}

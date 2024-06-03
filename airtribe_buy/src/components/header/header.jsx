@@ -4,9 +4,11 @@ import { Box } from "@mui/material";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
+import { Link } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../../firebase";
 import { toast } from "react-toastify";
+import { Link as RouterLink } from "react-router-dom";
 
 function Header() {
   const navigate = useNavigate();
@@ -40,8 +42,16 @@ function Header() {
               fontSize: "1.5rem",
             }}
           >
-            Shopify
+            <Link
+              component={RouterLink}
+              to="/products"
+              variant="h5"
+              underline="none"
+            >
+              {" Shopify"}
+            </Link>
           </Typography>
+
           {!token ? (
             <Box>
               <Button
@@ -71,6 +81,18 @@ function Header() {
             </Box>
           ) : (
             <Box>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => navigate("/login")}
+                sx={{
+                  marginRight: 1,
+                  borderColor: "primary.main",
+                  color: "primary.main",
+                }}
+              >
+                WishList
+              </Button>
               <Button
                 variant="outlined"
                 color="secondary"

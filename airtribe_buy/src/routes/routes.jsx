@@ -12,6 +12,10 @@ const token = localStorage.getItem("token");
 
 const router = createBrowserRouter([
   {
+    path: "",
+    element: <Navigate to="/products" />,
+  },
+  {
     path: "/",
     element: <MainLayout />,
     children: [
