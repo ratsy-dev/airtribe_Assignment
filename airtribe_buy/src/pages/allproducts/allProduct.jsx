@@ -55,11 +55,15 @@ const AllProductPage = () => {
   };
 
   const handleProductDetail = async (id) => {
+    localStorage.setItem("progress", true);
+    window.dispatchEvent(new Event("storage"));
     try {
       const response = await AIRTRIBE_API.get(`/products/${id}`);
       const product = response.data;
       navigate(`/products/${id}`, { state: { product } });
     } catch (error) {
+      localStorage.setItem("progress", false);
+      window.dispatchEvent(new Event("storage"));
       console.error(error.message || "Error fetching products");
     }
   };

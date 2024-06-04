@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import AppBar from "@mui/material/AppBar";
-import { Box } from "@mui/material";
+import { Box, LinearProgress } from "@mui/material";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -13,9 +13,28 @@ import { Link as RouterLink } from "react-router-dom";
 function Header() {
   const navigate = useNavigate();
   const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     setToken(localStorage.getItem("token"));
   }, [token]);
+
+  useEffect(() => {
+    setLoading(localStorage.getItem("progress"));
+  }, []);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setLoading(localStorage.getItem("progress") === "true");
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    handleStorageChange();
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -26,6 +45,8 @@ function Header() {
       toast.error(error.message);
     }
   };
+
+  console.log(loading);
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -107,6 +128,7 @@ function Header() {
             </Box>
           )}
         </Toolbar>
+        {loading && <LinearProgress color="secondary" />}
       </AppBar>
     </Box>
   );
