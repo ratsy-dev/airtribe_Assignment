@@ -37,7 +37,10 @@ function RegisterPage() {
           firstName: fName,
           lastName: lName,
           contactNumber: contactNum,
+          wishlist_products: null,
+          cartlist_products: null,
         });
+
         navigate("/login");
         toast.success("User registered Successfully");
         setLoading(false);

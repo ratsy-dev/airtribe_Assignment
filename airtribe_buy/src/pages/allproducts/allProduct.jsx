@@ -15,6 +15,8 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { auth, db } from "../../firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const AllProductPage = () => {
   const navigate = useNavigate();
@@ -24,7 +26,7 @@ const AllProductPage = () => {
 
   useEffect(() => {
     setToken(localStorage.getItem("token"));
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -42,13 +44,61 @@ const AllProductPage = () => {
     fetchProducts();
   }, []);
 
-  const handleWishList = () => {
-    if (!token) {
-      toast.error("Please login for wishlisting a product");
+  const handleWishList = async (event, id) => {
+    event.stopPropagation();
+
+    const userRef = doc(db, "User", auth.currentUser.uid);
+    let userData;
+
+    try {
+      const userSnapshot = await getDoc(userRef);
+      userData = userSnapshot.data();
+
+      if (!userData) {
+        console.error("User document not found!");
+        toast.error("An error occurred. Please try again later.");
+        return;
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      toast.error("An error occurred. Please try again later.");
+      return;
+    }
+
+    let productData;
+    try {
+      const response = await AIRTRIBE_API.get(`/products/${id}`);
+      productData = response.data;
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+      toast.error("Error fetching product details. Please try again later.");
+      return;
+    }
+
+    if (
+      userData.wishlist_products &&
+      userData.wishlist_products.some((item) => item.id === id)
+    ) {
+      toast.info("Item already exists in wishlist");
+
+      return;
+    }
+
+    try {
+      userData.wishlist_products = userData.wishlist_products || [];
+      userData.wishlist_products.push(productData);
+      await setDoc(userRef, userData);
+      toast.success("Item added to wishlist!");
+    } catch (error) {
+      console.error("Error updating wishlist:", error);
+      toast.error(
+        "An error occurred while adding to wishlist. Please try again later."
+      );
     }
   };
 
-  const handleCart = () => {
+  const handleCart = (event) => {
+    event.stopPropagation();
     if (!token) {
       toast.error("Please login for adding a product to the cart");
     }
@@ -169,7 +219,7 @@ const AllProductPage = () => {
                     readOnly
                   />
                   <Button
-                    onClick={() => handleWishList()}
+                    onClick={(event) => handleWishList(event, product.id)}
                     style={{
                       border: "none",
                       outline: "none",
@@ -196,7 +246,7 @@ const AllProductPage = () => {
                   <Button
                     variant="outlined"
                     color="secondary"
-                    onClick={() => handleCart()}
+                    onClick={(event) => handleCart(event)}
                     sx={{
                       borderColor: "secondary.main",
                       color: "secondary.main",

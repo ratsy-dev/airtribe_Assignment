@@ -7,6 +7,7 @@ import CartPage from "../pages/cart/cart";
 import CheckOutPage from "../pages/checkout/checkout";
 import ProtectedRoute from "./protectedroute/protectedRoute";
 import MainLayout from "../container/layout";
+import WishListPage from "../pages/wishlist/wishlist";
 
 const token = localStorage.getItem("token");
 
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
       {
         path: "cart",
         element: <ProtectedRoute element={<CartPage />} />,
+      },
+      {
+        path: "wishlist",
+        element: <ProtectedRoute element={<WishListPage />} />,
       },
       {
         path: "/checkout",

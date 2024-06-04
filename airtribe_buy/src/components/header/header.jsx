@@ -9,6 +9,20 @@ import { useNavigate } from "react-router-dom";
 import { auth } from "../../firebase";
 import { toast } from "react-toastify";
 import { Link as RouterLink } from "react-router-dom";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import Badge from "@mui/material/Badge";
+import IconButton from "@mui/material/IconButton";
+import { styled } from "@mui/material/styles";
+import ContentPasteIcon from "@mui/icons-material/ContentPaste";
+
+const StyledBadge = styled(Badge)(({ theme }) => ({
+  "& .MuiBadge-badge": {
+    right: 13,
+    top: 5,
+    border: `2px solid ${theme.palette.background.paper}`,
+    padding: "0 4px",
+  },
+}));
 
 function Header() {
   const navigate = useNavigate();
@@ -17,7 +31,7 @@ function Header() {
 
   useEffect(() => {
     setToken(localStorage.getItem("token"));
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     setLoading(localStorage.getItem("progress"));
@@ -40,13 +54,26 @@ function Header() {
     try {
       await auth.signOut();
       localStorage.clear();
+      navigate("/products");
       window.location.reload();
     } catch (error) {
       toast.error(error.message);
     }
   };
 
-  console.log(loading);
+  const handleCart = () => {
+    if (!token) {
+      toast.error("Please login for adding a product to the cart");
+    }
+  };
+
+  const wishlistHandler = () => {
+    localStorage.setItem("progress", true);
+    window.dispatchEvent(new Event("storage"));
+    setTimeout(() => {
+      navigate("/wishlist");
+    }, 1000);
+  };
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -61,6 +88,8 @@ function Header() {
               textTransform: "uppercase",
               fontWeight: 900,
               fontSize: "1.5rem",
+              border: "none",
+              outline: "none",
             }}
           >
             <Link
@@ -87,10 +116,11 @@ function Header() {
               >
                 Login
               </Button>
+
               <Button
                 variant="outlined"
                 color="regColor"
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/register")}
                 sx={{
                   marginRight: 1,
                   borderColor: "regColor.main",
@@ -102,18 +132,49 @@ function Header() {
             </Box>
           ) : (
             <Box>
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={() => navigate("/login")}
+              <IconButton
+                aria-label="cart"
+                onClick={() => handleCart()}
                 sx={{
-                  marginRight: 1,
-                  borderColor: "primary.main",
-                  color: "primary.main",
+                  color: "secondary.main",
+                  border: "none",
+                  "&:hover": {
+                    borderWidth: 0,
+                    backgroundColor: "inherit",
+                  },
                 }}
               >
-                WishList
-              </Button>
+                <StyledBadge badgeContent={null} color="secondary">
+                  <ShoppingCartIcon
+                    style={{
+                      color: "red",
+                      fontSize: "2rem",
+                    }}
+                  />
+                </StyledBadge>
+              </IconButton>
+              <IconButton
+                aria-label="cart"
+                onClick={() => wishlistHandler()}
+                sx={{
+                  marginRight: 1,
+                  border: "none",
+                  color: "primary.main",
+                  "&:hover": {
+                    borderWidth: 0,
+                    backgroundColor: "inherit",
+                  },
+                }}
+              >
+                <StyledBadge badgeContent={null} color="secondary">
+                  <ContentPasteIcon
+                    style={{
+                      color: "navy",
+                      fontSize: "2rem",
+                    }}
+                  />
+                </StyledBadge>
+              </IconButton>
               <Button
                 variant="outlined"
                 color="secondary"
