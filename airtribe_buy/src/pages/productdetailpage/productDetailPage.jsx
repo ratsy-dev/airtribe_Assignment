@@ -55,7 +55,7 @@ const ProductDetailPage = () => {
   };
 
   return (
-    <Box p={3}>
+    <Box p={3} mt={10}>
       <Breadcrumbs
         fontSize="md"
         spacing="8px"

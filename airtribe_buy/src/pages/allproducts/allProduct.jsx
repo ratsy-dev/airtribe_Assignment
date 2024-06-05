@@ -46,61 +46,115 @@ const AllProductPage = () => {
 
   const handleWishList = async (event, id) => {
     event.stopPropagation();
+    if (!token) {
+      toast.info("Please login for adding a product to the wishlist ");
+      return;
+    } else {
+      const userRef = doc(db, "User", auth.currentUser.uid);
+      let userData;
 
-    const userRef = doc(db, "User", auth.currentUser.uid);
-    let userData;
+      try {
+        const userSnapshot = await getDoc(userRef);
+        userData = userSnapshot.data();
 
-    try {
-      const userSnapshot = await getDoc(userRef);
-      userData = userSnapshot.data();
-
-      if (!userData) {
-        console.error("User document not found!");
+        if (!userData) {
+          console.error("User document not found!");
+          toast.error("An error occurred. Please try again later.");
+          return;
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
         toast.error("An error occurred. Please try again later.");
         return;
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      toast.error("An error occurred. Please try again later.");
-      return;
-    }
 
-    let productData;
-    try {
-      const response = await AIRTRIBE_API.get(`/products/${id}`);
-      productData = response.data;
-    } catch (error) {
-      console.error("Error fetching product details:", error);
-      toast.error("Error fetching product details. Please try again later.");
-      return;
-    }
+      let productData;
+      try {
+        const response = await AIRTRIBE_API.get(`/products/${id}`);
+        productData = response.data;
+      } catch (error) {
+        console.error("Error fetching product details:", error);
+        toast.error("Error fetching product details. Please try again later.");
+        return;
+      }
 
-    if (
-      userData.wishlist_products &&
-      userData.wishlist_products.some((item) => item.id === id)
-    ) {
-      toast.info("Item already exists in wishlist");
+      if (
+        userData.wishlist_products &&
+        userData.wishlist_products.some((item) => item.id === id)
+      ) {
+        toast.info("Item already exists in wishlist");
 
-      return;
-    }
+        return;
+      }
 
-    try {
-      userData.wishlist_products = userData.wishlist_products || [];
-      userData.wishlist_products.push(productData);
-      await setDoc(userRef, userData);
-      toast.success("Item added to wishlist!");
-    } catch (error) {
-      console.error("Error updating wishlist:", error);
-      toast.error(
-        "An error occurred while adding to wishlist. Please try again later."
-      );
+      try {
+        userData.wishlist_products = userData.wishlist_products || [];
+        userData.wishlist_products.push(productData);
+        await setDoc(userRef, userData);
+        toast.success("Item added to wishlist!");
+      } catch (error) {
+        console.error("Error updating wishlist:", error);
+        toast.error(
+          "An error occurred while adding to wishlist. Please try again later."
+        );
+      }
     }
   };
 
-  const handleCart = (event) => {
+  const handleCart = async (event, id) => {
     event.stopPropagation();
     if (!token) {
-      toast.error("Please login for adding a product to the cart");
+      toast.info("Please login for adding a product to the wishlist ");
+      return;
+    } else {
+      const userRef = doc(db, "User", auth.currentUser.uid);
+      let userData;
+
+      try {
+        const userSnapshot = await getDoc(userRef);
+        userData = userSnapshot.data();
+
+        if (!userData) {
+          console.error("User document not found!");
+          toast.error("An error occurred. Please try again later.");
+          return;
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        toast.error("An error occurred. Please try again later.");
+        return;
+      }
+
+      let productData;
+      try {
+        const response = await AIRTRIBE_API.get(`/products/${id}`);
+        productData = response.data;
+      } catch (error) {
+        console.error("Error fetching product details:", error);
+        toast.error("Error fetching product details. Please try again later.");
+        return;
+      }
+
+      if (
+        userData.cartlist_products &&
+        userData.cartlist_products.some((item) => item.id === id)
+      ) {
+        toast.info("Item already exists in cartlist");
+
+        return;
+      }
+
+      try {
+        userData.cartlist_products = userData.cartlist_products || [];
+        userData.cartlist_products.push(productData);
+        await setDoc(userRef, userData);
+        toast.success("Item added to cartlist!!");
+      } catch (error) {
+        console.error("Error updating cartlist:", error);
+        toast.error(
+          "An error occurred while adding to cartlist. Please try again later."
+        );
+      }
     }
   };
 
@@ -129,6 +183,7 @@ const AllProductPage = () => {
             justifyContent: "center",
             flexWrap: "wrap",
             padding: "2rem 0",
+            mt: 8,
           }}
         >
           {skeletonArray.map((_, index) => (
@@ -162,6 +217,7 @@ const AllProductPage = () => {
             justifyContent: "center",
             flexWrap: "wrap",
             padding: "2rem 0",
+            mt: 8,
           }}
         >
           {products.map((product) => (
@@ -246,7 +302,7 @@ const AllProductPage = () => {
                   <Button
                     variant="outlined"
                     color="secondary"
-                    onClick={(event) => handleCart(event)}
+                    onClick={(event) => handleCart(event, product.id)}
                     sx={{
                       borderColor: "secondary.main",
                       color: "secondary.main",

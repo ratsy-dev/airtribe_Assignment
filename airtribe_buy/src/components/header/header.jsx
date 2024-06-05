@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { Link } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../../firebase";
+import { auth, db } from "../../firebase";
 import { toast } from "react-toastify";
 import { Link as RouterLink } from "react-router-dom";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -14,6 +14,7 @@ import Badge from "@mui/material/Badge";
 import IconButton from "@mui/material/IconButton";
 import { styled } from "@mui/material/styles";
 import ContentPasteIcon from "@mui/icons-material/ContentPaste";
+import { doc, getDoc } from "firebase/firestore";
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
   "& .MuiBadge-badge": {
@@ -28,12 +29,11 @@ function Header() {
   const navigate = useNavigate();
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [wishlistProductCount, setWishListProductCount] = useState(null);
+  const [cartlistProductCount, setCartListProductCount] = useState(null);
 
   useEffect(() => {
     setToken(localStorage.getItem("token"));
-  }, []);
-
-  useEffect(() => {
     setLoading(localStorage.getItem("progress"));
   }, []);
 
@@ -50,6 +50,41 @@ function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    const getUserWishlist = async () => {
+      if (auth.currentUser) {
+        const userRef = doc(db, "User", auth.currentUser.uid);
+        try {
+          const userSnapshot = await getDoc(userRef);
+          if (userSnapshot.exists) {
+            const userData = userSnapshot.data();
+            setWishListProductCount(userData.wishlist_products.length || null);
+            setCartListProductCount(userData.cartlist_products.length || null);
+            localStorage.setItem("progress", false);
+            window.dispatchEvent(new Event("storage"));
+          } else {
+            console.error("User document not found!");
+          }
+        } catch (error) {
+          console.error("Error fetching wishlist:", error);
+          toast.error("An error occurred. Please try again later.");
+        }
+      } else {
+        console.error("User is not authenticated!");
+      }
+    };
+
+    getUserWishlist();
+
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        getUserWishlist();
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const handleLogout = async () => {
     try {
       await auth.signOut();
@@ -61,10 +96,12 @@ function Header() {
     }
   };
 
-  const handleCart = () => {
-    if (!token) {
-      toast.error("Please login for adding a product to the cart");
-    }
+  const cartHandler = () => {
+    localStorage.setItem("progress", true);
+    window.dispatchEvent(new Event("storage"));
+    setTimeout(() => {
+      navigate("/cart");
+    }, 1000);
   };
 
   const wishlistHandler = () => {
@@ -77,7 +114,7 @@ function Header() {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" sx={{ bgcolor: "background.paper" }}>
+      <AppBar position="fixed" sx={{ bgcolor: "background.paper" }}>
         <Toolbar>
           <Typography
             color={"primary.main"}
@@ -134,7 +171,7 @@ function Header() {
             <Box>
               <IconButton
                 aria-label="cart"
-                onClick={() => handleCart()}
+                onClick={() => cartHandler()}
                 sx={{
                   color: "secondary.main",
                   border: "none",
@@ -144,7 +181,10 @@ function Header() {
                   },
                 }}
               >
-                <StyledBadge badgeContent={null} color="secondary">
+                <StyledBadge
+                  badgeContent={cartlistProductCount}
+                  color="secondary"
+                >
                   <ShoppingCartIcon
                     style={{
                       color: "red",
@@ -166,7 +206,10 @@ function Header() {
                   },
                 }}
               >
-                <StyledBadge badgeContent={null} color="secondary">
+                <StyledBadge
+                  badgeContent={wishlistProductCount}
+                  color="secondary"
+                >
                   <ContentPasteIcon
                     style={{
                       color: "navy",

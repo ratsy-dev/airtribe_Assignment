@@ -71,10 +71,8 @@ const WishListPage = () => {
 
   const skeletonArray = new Array(8).fill(0);
 
-  console.log(auth.currentUser);
-
   return (
-    <Box p={3}>
+    <Box p={3} mt={10}>
       <Breadcrumbs
         fontSize="md"
         spacing="8px"
@@ -94,38 +92,27 @@ const WishListPage = () => {
         <Typography color="text.primary">WishList</Typography>
       </Breadcrumbs>
       {loading ? (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            flexWrap: "wrap",
-            padding: "2rem 0",
-          }}
-        >
+        <>
           {skeletonArray.map((_, index) => (
             <Box
               key={index}
               sx={{
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
-                width: 300,
+                width: "100%",
                 margin: "10px",
               }}
             >
               <Skeleton
                 variant="rectangular"
-                width={300}
+                width="90%"
                 height={200}
                 animation="wave"
               />
-              <Box sx={{ pt: 0.5, width: "100%" }}>
-                <Skeleton />
-                <Skeleton width="60%" />
-              </Box>
+              <Skeleton width="90%" />
             </Box>
           ))}
-        </Box>
+        </>
       ) : !products ? (
         <Box
           sx={{
