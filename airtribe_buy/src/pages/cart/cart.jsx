@@ -56,7 +56,7 @@ function CartPage() {
           const userSnapshot = await getDoc(userRef);
           if (userSnapshot.exists) {
             const userData = userSnapshot.data();
-            setProducts(userData.cartlist_products || []);
+            setProducts(userData.cart || []);
             localStorage.setItem("progress", false);
             window.dispatchEvent(new Event("storage"));
             setLoading(false);
@@ -132,6 +132,29 @@ function CartPage() {
             height={400}
             animation="wave"
           />
+        </Box>
+      ) : !products || products?.length == 0 ? (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            mt: 30,
+          }}
+        >
+          <Typography
+            color={"primary.main"}
+            variant="h6"
+            component="div"
+            sx={{
+              textTransform: "uppercase",
+              fontWeight: 900,
+              fontSize: "1.5rem",
+            }}
+          >
+            No Products in cart
+          </Typography>
         </Box>
       ) : (
         <TableContainer

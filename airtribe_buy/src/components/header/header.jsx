@@ -15,6 +15,7 @@ import IconButton from "@mui/material/IconButton";
 import { styled } from "@mui/material/styles";
 import ContentPasteIcon from "@mui/icons-material/ContentPaste";
 import { doc, getDoc } from "firebase/firestore";
+import { useData } from "../context/context";
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
   "& .MuiBadge-badge": {
@@ -27,10 +28,9 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
 
 function Header() {
   const navigate = useNavigate();
+  const { wishlistCount, cartCount } = useData();
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [wishlistProductCount, setWishListProductCount] = useState(null);
-  const [cartlistProductCount, setCartListProductCount] = useState(null);
 
   useEffect(() => {
     setToken(localStorage.getItem("token"));
@@ -51,15 +51,13 @@ function Header() {
   }, []);
 
   useEffect(() => {
-    const getUserWishlist = async () => {
+    const getUserlist = async () => {
       if (auth.currentUser) {
         const userRef = doc(db, "User", auth.currentUser.uid);
         try {
           const userSnapshot = await getDoc(userRef);
           if (userSnapshot.exists) {
             const userData = userSnapshot.data();
-            setWishListProductCount(userData.wishlist_products.length || null);
-            setCartListProductCount(userData.cartlist_products.length || null);
             localStorage.setItem("progress", false);
             window.dispatchEvent(new Event("storage"));
           } else {
@@ -74,11 +72,11 @@ function Header() {
       }
     };
 
-    getUserWishlist();
+    getUserlist();
 
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        getUserWishlist();
+        getUserlist();
       }
     });
 
@@ -181,10 +179,7 @@ function Header() {
                   },
                 }}
               >
-                <StyledBadge
-                  badgeContent={cartlistProductCount}
-                  color="secondary"
-                >
+                <StyledBadge badgeContent={cartCount} color="secondary">
                   <ShoppingCartIcon
                     style={{
                       color: "red",
@@ -206,10 +201,7 @@ function Header() {
                   },
                 }}
               >
-                <StyledBadge
-                  badgeContent={wishlistProductCount}
-                  color="secondary"
-                >
+                <StyledBadge badgeContent={wishlistCount} color="secondary">
                   <ContentPasteIcon
                     style={{
                       color: "navy",

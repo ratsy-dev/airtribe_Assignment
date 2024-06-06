@@ -17,12 +17,14 @@ import Skeleton from "@mui/material/Skeleton";
 import { Link as RouterLink } from "react-router-dom";
 import { toast } from "react-toastify";
 import { auth, db } from "../../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { useData } from "../../components/context/context";
 
 const WishListPage = () => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
+  const { setCartCount } = useData();
 
   useEffect(() => {
     setLoading(true);
@@ -33,7 +35,7 @@ const WishListPage = () => {
           const userSnapshot = await getDoc(userRef);
           if (userSnapshot.exists) {
             const userData = userSnapshot.data();
-            setProducts(userData.wishlist_products || []);
+            setProducts(userData.wishlist || []);
             localStorage.setItem("progress", false);
             window.dispatchEvent(new Event("storage"));
             setLoading(false);
@@ -68,6 +70,59 @@ const WishListPage = () => {
   useEffect(() => {
     setToken(localStorage.getItem("token"));
   }, []);
+
+  const handleMoveToCart = async (event, product) => {
+    event.stopPropagation();
+    if (!token) {
+      toast.info("Please login for adding a product to the cart");
+      return;
+    } else {
+      const userRef = doc(db, "User", auth.currentUser.uid);
+      let userData;
+
+      try {
+        const userSnapshot = await getDoc(userRef);
+        userData = userSnapshot.data();
+
+        if (!userData) {
+          console.error("User document not found!");
+          toast.error("An error occurred. Please try again later.");
+          return;
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        toast.error("An error occurred. Please try again later.");
+        return;
+      }
+
+      if (
+        userData.cart &&
+        userData.cart.some((item) => item.id === product.id)
+      ) {
+        toast.info("Item already exists in cart");
+        return;
+      }
+
+      const newCart = userData.cart ? [...userData.cart, product] : [product];
+      try {
+        await setDoc(userRef, { cart: newCart }, { merge: true });
+        setCartCount((prevCount) => prevCount + 1); // Update the context state
+        toast.success("Product added to cart");
+
+        // Remove the product from the wishlist
+        const newWishlist = userData.wishlist.filter(
+          (item) => item.id !== product.id
+        );
+        await setDoc(userRef, { wishlist: newWishlist }, { merge: true });
+        setProducts(newWishlist); // Update local state
+      } catch (error) {
+        console.error("Error updating cart:", error);
+        toast.error(
+          "An error occurred while adding to the cart. Please try again."
+        );
+      }
+    }
+  };
 
   const skeletonArray = new Array(8).fill(0);
 
@@ -113,7 +168,7 @@ const WishListPage = () => {
             </Box>
           ))}
         </>
-      ) : !products ? (
+      ) : !products || products?.length == 0 ? (
         <Box
           sx={{
             display: "flex",
@@ -133,7 +188,7 @@ const WishListPage = () => {
               fontSize: "1.5rem",
             }}
           >
-            No Products
+            No Products in wishlist
           </Typography>
         </Box>
       ) : (
@@ -184,7 +239,7 @@ const WishListPage = () => {
                     <Button
                       variant="outlined"
                       color="primary"
-                      onClick={() => handleLogout()}
+                      onClick={(event) => handleMoveToCart(event, product)}
                       sx={{
                         borderColor: "primary.main",
                         color: "primary.main",

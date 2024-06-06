@@ -17,12 +17,14 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../../firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { useData } from "../../components/context/context";
 
 const AllProductPage = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState(null);
+  const { setWishlistCount, setCartCount } = useData();
 
   useEffect(() => {
     setToken(localStorage.getItem("token"));
@@ -79,23 +81,24 @@ const AllProductPage = () => {
       }
 
       if (
-        userData.wishlist_products &&
-        userData.wishlist_products.some((item) => item.id === id)
+        userData.wishlist &&
+        userData.wishlist.some((item) => item.id === id)
       ) {
         toast.info("Item already exists in wishlist");
-
         return;
       }
 
+      const newWishlist = userData.wishlist
+        ? [...userData.wishlist, productData]
+        : [productData];
       try {
-        userData.wishlist_products = userData.wishlist_products || [];
-        userData.wishlist_products.push(productData);
-        await setDoc(userRef, userData);
-        toast.success("Item added to wishlist!");
+        await setDoc(userRef, { wishlist: newWishlist }, { merge: true });
+        setWishlistCount((prevCount) => prevCount + 1);
+        toast.success("Product added to wishlist");
       } catch (error) {
         console.error("Error updating wishlist:", error);
         toast.error(
-          "An error occurred while adding to wishlist. Please try again later."
+          "An error occurred while adding to the wishlist. Please try again."
         );
       }
     }
@@ -135,24 +138,23 @@ const AllProductPage = () => {
         return;
       }
 
-      if (
-        userData.cartlist_products &&
-        userData.cartlist_products.some((item) => item.id === id)
-      ) {
+      if (userData.cart && userData.cart.some((item) => item.id === id)) {
         toast.info("Item already exists in cartlist");
 
         return;
       }
 
+      const newCart = userData.cart
+        ? [...userData.cart, productData]
+        : [productData];
       try {
-        userData.cartlist_products = userData.cartlist_products || [];
-        userData.cartlist_products.push(productData);
-        await setDoc(userRef, userData);
-        toast.success("Item added to cartlist!!");
+        await setDoc(userRef, { cart: newCart }, { merge: true });
+        setCartCount((prevCount) => prevCount + 1); // Update the context state
+        toast.success("Product added to cart");
       } catch (error) {
-        console.error("Error updating cartlist:", error);
+        console.error("Error updating cart:", error);
         toast.error(
-          "An error occurred while adding to cartlist. Please try again later."
+          "An error occurred while adding to the cart. Please try again."
         );
       }
     }

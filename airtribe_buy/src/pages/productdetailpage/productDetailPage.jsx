@@ -21,6 +21,9 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import Skeleton from "@mui/material/Skeleton";
 import { Link as RouterLink } from "react-router-dom";
 import { toast } from "react-toastify";
+import { auth, db } from "../../firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { useData } from "../../components/context/context";
 
 const ProductDetailPage = () => {
   const location = useLocation();
@@ -28,6 +31,7 @@ const ProductDetailPage = () => {
 
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { setWishlistCount, setCartCount } = useData();
 
   useEffect(() => {
     setLoading(true);
@@ -42,15 +46,97 @@ const ProductDetailPage = () => {
     setToken(localStorage.getItem("token"));
   }, [token]);
 
-  const handleWishList = () => {
+  const handleWishList = async (event, id) => {
+    event.stopPropagation();
     if (!token) {
-      toast.error("Please login for wishlisting a product");
+      toast.info("Please login for adding a product to the wishlist ");
+      return;
+    } else {
+      const userRef = doc(db, "User", auth.currentUser.uid);
+      let userData;
+
+      try {
+        const userSnapshot = await getDoc(userRef);
+        userData = userSnapshot.data();
+
+        if (!userData) {
+          console.error("User document not found!");
+          toast.error("An error occurred. Please try again later.");
+          return;
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        toast.error("An error occurred. Please try again later.");
+        return;
+      }
+
+      if (
+        userData.wishlist &&
+        userData.wishlist.some((item) => item.id === product.id)
+      ) {
+        toast.info("Item already exists in wishlist");
+        return;
+      }
+
+      const newWishlist = userData.wishlist
+        ? [...userData.wishlist, product]
+        : [product];
+      try {
+        await setDoc(userRef, { wishlist: newWishlist }, { merge: true });
+        setWishlistCount((prevCount) => prevCount + 1);
+        toast.success("Product added to wishlist");
+      } catch (error) {
+        console.error("Error updating wishlist:", error);
+        toast.error(
+          "An error occurred while adding to the wishlist. Please try again."
+        );
+      }
     }
   };
 
-  const handleCart = () => {
+  const handleCart = async (event, id) => {
+    event.stopPropagation();
     if (!token) {
-      toast.error("Please login for adding a product to the cart");
+      toast.info("Please login for adding a product to the wishlist ");
+      return;
+    } else {
+      const userRef = doc(db, "User", auth.currentUser.uid);
+      let userData;
+
+      try {
+        const userSnapshot = await getDoc(userRef);
+        userData = userSnapshot.data();
+
+        if (!userData) {
+          console.error("User document not found!");
+          toast.error("An error occurred. Please try again later.");
+          return;
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        toast.error("An error occurred. Please try again later.");
+        return;
+      }
+
+      if (
+        userData.cart &&
+        userData.cart.some((item) => item.id === product.id)
+      ) {
+        toast.info("Item already exists in cart");
+        return;
+      }
+
+      const newCart = userData.cart ? [...userData.cart, product] : [product];
+      try {
+        await setDoc(userRef, { cart: newCart }, { merge: true });
+        setCartCount((prevCount) => prevCount + 1); // Update the context state
+        toast.success("Product added to cart");
+      } catch (error) {
+        console.error("Error updating cart:", error);
+        toast.error(
+          "An error occurred while adding to the cart. Please try again."
+        );
+      }
     }
   };
 
@@ -230,7 +316,7 @@ const ProductDetailPage = () => {
                     <Button
                       variant="outlined"
                       color="secondary"
-                      onClick={() => handleCart()}
+                      onClick={(event) => handleCart(event, product.id)}
                       sx={{
                         borderColor: "secondary.main",
                         color: "secondary.main",
@@ -246,7 +332,7 @@ const ProductDetailPage = () => {
                       Add to cart
                     </Button>
                     <Button
-                      onClick={() => handleWishList()}
+                      onClick={(event) => handleWishList(event, product.id)}
                       style={{
                         border: "none",
                         outline: "none",
