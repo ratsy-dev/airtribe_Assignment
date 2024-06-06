@@ -20,14 +20,17 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import Skeleton from "@mui/material/Skeleton";
 import { Link as RouterLink } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { auth, db } from "../../firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useData } from "../../components/context/context";
 
 const ProductDetailPage = () => {
+  const { id } = useParams();
   const location = useLocation();
-  const product = location.state.product;
+  const product = location?.state?.product;
+  const productId = location?.state?.product.id;
 
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -387,9 +390,28 @@ const ProductDetailPage = () => {
           )}
         </>
       ) : (
-        <Typography variant="body1" component="p" alignSelf="center">
-          No Product Found
-        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            mt: 30,
+          }}
+        >
+          <Typography
+            color={"primary.main"}
+            variant="h6"
+            component="div"
+            sx={{
+              textTransform: "uppercase",
+              fontWeight: 900,
+              fontSize: "1.5rem",
+            }}
+          >
+            No Product Found
+          </Typography>
+        </Box>
       )}
     </Box>
   );

@@ -95,16 +95,22 @@ function Header() {
   };
 
   const cartHandler = () => {
-    localStorage.setItem("progress", true);
-    window.dispatchEvent(new Event("storage"));
+    if (window.location.pathname !== "/cart") {
+      localStorage.setItem("progress", true);
+      window.dispatchEvent(new Event("storage"));
+    }
+
     setTimeout(() => {
       navigate("/cart");
     }, 1000);
   };
 
   const wishlistHandler = () => {
-    localStorage.setItem("progress", true);
-    window.dispatchEvent(new Event("storage"));
+    if (window.location.pathname !== "/wishlist") {
+      localStorage.setItem("progress", true);
+      window.dispatchEvent(new Event("storage"));
+    }
+
     setTimeout(() => {
       navigate("/wishlist");
     }, 1000);
