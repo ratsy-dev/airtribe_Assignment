@@ -3,6 +3,8 @@ import ReactDOM from "react-dom/client";
 import { CssBaseline } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material";
 import App from "./App.jsx";
+import { Provider } from "react-redux";
+import { store } from "./store/store.js";
 import "./index.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -31,7 +33,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <App />
+      <Provider store={store}>
+        <App />
+      </Provider>
+
       <ToastContainer
         position="top-center"
         autoClose={1500}
